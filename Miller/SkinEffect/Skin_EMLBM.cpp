@@ -3,8 +3,12 @@
 #include <string>
 #include "fstream"
 #include "Vector.h"
+#include <algorithm>
+#include <vector>
 
 using namespace std;
+
+void Amplitud(vector<double>& Amplitud, vector<double>& oldAmplitud);
 
 //------------------------CONSTANTS-------------------------------
 const int Lx = 1;   //
@@ -17,10 +21,11 @@ const double UTau = 1/Tau;
 const double UmUTau=1-1/Tau;
 //-------------------
 const double Epsilon0=1, Mu0=2;
-const double Sigma0=0.0125;
+const double Sigma0=0.01;
 const double C=1.0/sqrt(2.0);
 
 const double E00=0.001,B00=E00/C;
+const double T=25.0,omega=2*M_PI/T;
 
 //------------------Electromagnetic Constants for the Media------------------------------
 double mur(int ix,int iy,int iz){
@@ -71,7 +76,8 @@ class LatticeBoltzmann{
     void Collision(void);
     void ImposeFields(int t);
     void Advection(void);
-    void Print(void);
+    void Print(vector<double>& EAmplit);
+    void MeasureAmplitude(vector<double> &EAmplit);
 };
 
 LatticeBoltzmann::LatticeBoltzmann(){
@@ -260,7 +266,7 @@ void LatticeBoltzmann::ImposeFields(int t){
   int ix,iy,iz,r,p,i,j; double sigma0,mur0,epsilonr0,prefactor0,speedCell;
   int id0,id;
   double rhoc0; vector3D D0,B0,E0,H0,Jprima0,Eprima0;
-  double T=25.0,omega=2*M_PI/T;//25<T<50
+  //25<T<50
   iz=0; //On the whole incident plane
   for(ix=0;ix<Lx;ix++) //for each cell
     for(iy=0;iy<Ly;iy++){
@@ -306,39 +312,80 @@ void LatticeBoltzmann::Advection(void){
               }
       }
 }
-void LatticeBoltzmann::Print(void){
+void LatticeBoltzmann::Print(vector<double>& EAmplit){
   int ix=0,iy=0,iz,r,p,i,j; double sigma0,mur0,epsilonr0,prefactor0;
   double rhoc0; vector3D D0,B0,E0,H0,Jprima0,Eprima0; double E2,B2;
+  int iAmpl = 0;
   ofstream Myfile("data.dat");
-  for(iz=0;iz<Lz/2.0;iz++){
+  double delta, mu,aux;
+    for(iz=Lz/4.0;iz<Lz/2.0;iz++){
+      sigma0=sigma(0,0,iz); mu = Mu0*mur(0,0,iz);
+      mur0=mur(ix,iy,iz); epsilonr0=epsilonr(ix,iy,iz);
+      prefactor0=prefactor(epsilonr0,sigma0);
+      //Compute the Fields
+      rhoc0=rhoc(ix,iy,iz,true); D0=D(ix,iy,iz,true); B0=B(ix,iy,iz,true);
+      E0=E(D0,epsilonr0); H0=H(B0,mur0);
+      Jprima0=Jprima(E0,prefactor0); Eprima0=Eprima(E0,Jprima0,epsilonr0);
+      aux = omega*epsilonr0*Epsilon0/sigma0;
+      delta = sqrt(2/(sigma0*omega*mu)*(sqrt(1+aux*aux)+aux));
+      Myfile<<iz<<"\t"<<EAmplit[iAmpl]<<"\t"<<exp(-(iz-Lz/4.0)/delta)
+            << "\t" << Eprima0.x()/E00<< endl;
+      iAmpl ++;
+  }
+
+  Myfile.close();
+}
+
+void LatticeBoltzmann::MeasureAmplitude(vector<double> &EAmplit){
+  int ix=0,iy=0,iz,r,p,i,j; double sigma0,mur0,epsilonr0,prefactor0;
+  double rhoc0; vector3D D0,B0,E0,H0,Jprima0,Eprima0; double E2,B2;
+  double iAmpl = 0;
+  for(iz=Lz/4.0;iz<Lz/2.0;iz++){
     //Compute the electromagnetic constants
     sigma0=sigma(ix,iy,iz); mur0=mur(ix,iy,iz); epsilonr0=epsilonr(ix,iy,iz);
     prefactor0=prefactor(epsilonr0,sigma0);
     //Compute the Fields
     rhoc0=rhoc(ix,iy,iz,true); D0=D(ix,iy,iz,true); B0=B(ix,iy,iz,true);
     E0=E(D0,epsilonr0); H0=H(B0,mur0);
-    Jprima0=Jprima(E0,prefactor0); Eprima0=Eprima(E0,Jprima0,epsilonr0); 
+    Jprima0=Jprima(E0,prefactor0); Eprima0=Eprima(E0,Jprima0,epsilonr0);
     //Print
-    Myfile<<iz<<" "<<E0.x()/E00<<endl;
+    EAmplit[iAmpl] = abs(Eprima0.x()/E00);
+    iAmpl ++;
   }
-  Myfile.close();
 }
 
 
 int main(){
   LatticeBoltzmann OndaSkin;
-  int t, tmax=Lz/(3*C);
+  int t, tmax=Lz/(2*C);
+
+  int numE = Lz/2 - Lz/4;
+  vector<double> EAmplit(numE,0);
+  vector<double> OldEAmplit(numE,0);
   
   OndaSkin.Start();
   OndaSkin.ImposeFields(0);
   
-  for(t=0;t<tmax;t++){
+  for(t=0;t<tmax+T;t++){
     OndaSkin.Collision();
     OndaSkin.ImposeFields(t);
     OndaSkin.Advection();
+    if(t == tmax) OndaSkin.MeasureAmplitude(OldEAmplit);
+    if(t > tmax){
+      OndaSkin.MeasureAmplitude(EAmplit);
+      Amplitud(EAmplit,OldEAmplit);
+      OldEAmplit = EAmplit;
+    }
   }
   
-  OndaSkin.Print();
+  OndaSkin.Print(EAmplit);
   
   return 0;
+}
+
+void Amplitud(vector<double>& Amplitud,  vector<double>& oldAmplitud) {
+  transform(oldAmplitud.begin(), oldAmplitud.end(), Amplitud.begin(), Amplitud.begin(), [](double a, double b) {
+    double a_abs = abs(a), b_abs = abs(b);
+    return (a_abs > b_abs) ? a_abs : b_abs;
+  });
 }
