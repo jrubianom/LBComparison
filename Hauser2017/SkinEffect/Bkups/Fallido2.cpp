@@ -61,7 +61,7 @@ class LatticeBoltzmann{
     vector3D H(vector3D & B0,double Mur);
     //Equilibrium Functions
     vector3D feq(vector3D & D,vector3D & B,int r,int i,
-                 double epsr,double mur0);
+                 double epsr,double mur0,double sigma0);
     //Simulation Functions
     void Start(void);
     void Collision(void);
@@ -139,10 +139,10 @@ vector3D LatticeBoltzmann::H(vector3D & B0,double Mur){
 }
 //---------------EQUILIBRIUM FUNCTIONS-------------
 vector3D LatticeBoltzmann::feq(vector3D & D,vector3D & B,int r,int i,
-                               double epsr,double mur0){
+                               double epsr,double mur0,double sigma0){
   vector3D Aux;
   if(r == 0){
-    Aux = D - 3*((v[i]^B)*1/(mur0*Mu0));
+    Aux = D*(1 + sigma0/epsr*Epsilon0) - 3*((v[i]^B)*1/(mur0*Mu0));
   }
   if(r == 1){
     Aux = B + 3*((v[i]^D)*1/(epsr*Epsilon0));
@@ -166,12 +166,12 @@ void LatticeBoltzmann::Start(void){
 
         B0.cargue(0,0,0);
         E0.cargue(0,0,0);
-        D0 = epsilonr0*Epsilon0*E0*exp(-sigma0/(epsilonr0*Epsilon0));
+        D0 = epsilonr0*Epsilon0*E0;
 
         for(r=0;r<Qr;r++)
           for(i=0;i<Qi;i++){
             id = index(ix,iy,iz,r,i);
-            fnew[id]=f[id]=feq(D0,B0,r,i,epsilonr0,mur0);
+            fnew[id]=f[id]=feq(D0,B0,r,i,epsilonr0,mur0,sigma0);
           }
       }
 }
@@ -186,14 +186,14 @@ void LatticeBoltzmann::Collision(void){
         //Compute the constants
         sigma0=sigma(ix,iy,iz); mur0=mur(ix,iy,iz); epsilonr0=epsilonr(ix,iy,iz);
         //Compute the fields
-        D0=D(ix,iy,iz,false)*exp(-sigma0/(epsilonr0*Epsilon0));
+        D0=D(ix,iy,iz,false)/(1+sigma0/(epsilonr0*Epsilon0));
         B0=B(ix,iy,iz,false);
         //E0 = E(D0,epsilonr0); H0 = H(B0,mur0);
         //BGK evolution rule
         for(r = 0; r < Qr; r++)
           for(i=0; i < Qi; i++){
             id = index(ix,iy,iz,r,i);
-            fnew[id]=2*feq(D0,B0,r,i,epsilonr0,mur0)-f[id];
+            fnew[id]=2*feq(D0,B0,r,i,epsilonr0,mur0,sigma0)-f[id];
           }
 
       }
@@ -213,14 +213,14 @@ void LatticeBoltzmann::ImposeFields(int t){
       //rhoc0=0; Jprima0.cargue(0,0,0);
       B0.cargue(0,(E00/speedCell)*sin(omega*t),0);
       E0.cargue(E00*sin(omega*t),0,0);
-      D0 = epsilonr0*Epsilon0*E0*exp(-sigma0/(epsilonr0*Epsilon0));
+      D0 = epsilonr0*Epsilon0*E0;
       //H0.cargue(0,sin(iz*2*M_PI/Lz),0);
       //E0.cargue(sin(iz*2*M_PI/Lz),0,0);
       //Impose f=fnew=feq with the desired fields
       for(r=0; r < Qr; r++)
         for(i=0;i < Qi; i++){
           id = index(ix,iy,iz,r,i);
-          fnew[id]=f[id]=feq(D0,B0,r,i,epsilonr0,mur0);
+          fnew[id]=f[id]=feq(D0,B0,r,i,epsilonr0,mur0,sigma0);
         }
     }
 }
@@ -254,8 +254,9 @@ void LatticeBoltzmann::Print(vector<double>& EAmplit){
     aux = omega*epsilonr0*Epsilon0/sigma0;
     delta = sqrt(2/(sigma0*omega*mu)*(sqrt(1+aux*aux)+aux));
 //Compute the Fields
-    D0=D(ix,iy,iz,true); B0=B(ix,iy,iz,true);
-    E0=E(D0,epsilonr0)*exp(sigma0/(epsilonr0*Epsilon0));
+    D0=D(ix,iy,iz,true)/(1+sigma0/(epsilonr0*Epsilon0));
+    B0=B(ix,iy,iz,true);
+    E0=E(D0,epsilonr0);
     //Print
     E2=norma2(E0); B2=norma2(B0);
     eps = Epsilon0*epsilonr0;
@@ -277,8 +278,9 @@ void LatticeBoltzmann::MeasureAmplitude(vector<double> &EAmplit){
     sigma0=sigma(ix,iy,iz); mur0=mur(ix,iy,iz); epsilonr0=epsilonr(ix,iy,iz);
 
     //Compute the Fields
-    D0=D(ix,iy,iz,true); B0=B(ix,iy,iz,true);
-    E0=E(D0,epsilonr0)*exp(sigma0/(epsilonr0*Epsilon0));
+    D0=D(ix,iy,iz,true)/(1+sigma0/(epsilonr0*Epsilon0));
+    B0=B(ix,iy,iz,true);
+    E0=E(D0,epsilonr0);
 
     EAmplit[iAmpl] = abs(E0.x()/E00);
     iAmpl ++;

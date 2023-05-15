@@ -61,7 +61,7 @@ class LatticeBoltzmann{
     vector3D H(vector3D & B0,double Mur);
     //Equilibrium Functions
     vector3D feq(vector3D & D,vector3D & B,int r,int i,
-                 double epsr,double mur0);
+                 double epsr,double mur0,double sigma0);
     //Simulation Functions
     void Start(void);
     void Collision(void);
@@ -139,13 +139,13 @@ vector3D LatticeBoltzmann::H(vector3D & B0,double Mur){
 }
 //---------------EQUILIBRIUM FUNCTIONS-------------
 vector3D LatticeBoltzmann::feq(vector3D & D,vector3D & B,int r,int i,
-                               double epsr,double mur0){
+                               double epsr,double mur0,double sigma0){
   vector3D Aux;
   if(r == 0){
     Aux = D - 3*((v[i]^B)*1/(mur0*Mu0));
   }
   if(r == 1){
-    Aux = B + 3*((v[i]^D)*1/(epsr*Epsilon0));
+    Aux = B + 3*((v[i]^D)*1/(epsr*Epsilon0))*exp(sigma0/(epsr*Epsilon0));
   }
   return Aux*(1.0/6.0);
 }
@@ -171,7 +171,7 @@ void LatticeBoltzmann::Start(void){
         for(r=0;r<Qr;r++)
           for(i=0;i<Qi;i++){
             id = index(ix,iy,iz,r,i);
-            fnew[id]=f[id]=feq(D0,B0,r,i,epsilonr0,mur0);
+            fnew[id]=f[id]=feq(D0,B0,r,i,epsilonr0,mur0,sigma0);
           }
       }
 }
@@ -186,14 +186,14 @@ void LatticeBoltzmann::Collision(void){
         //Compute the constants
         sigma0=sigma(ix,iy,iz); mur0=mur(ix,iy,iz); epsilonr0=epsilonr(ix,iy,iz);
         //Compute the fields
-        D0=D(ix,iy,iz,false)*exp(-sigma0/(epsilonr0*Epsilon0));
+        D0=D(ix,iy,iz,false);
         B0=B(ix,iy,iz,false);
         //E0 = E(D0,epsilonr0); H0 = H(B0,mur0);
         //BGK evolution rule
         for(r = 0; r < Qr; r++)
           for(i=0; i < Qi; i++){
             id = index(ix,iy,iz,r,i);
-            fnew[id]=2*feq(D0,B0,r,i,epsilonr0,mur0)-f[id];
+            fnew[id]=2*feq(D0,B0,r,i,epsilonr0,mur0,sigma0)-f[id];
           }
 
       }
@@ -220,7 +220,7 @@ void LatticeBoltzmann::ImposeFields(int t){
       for(r=0; r < Qr; r++)
         for(i=0;i < Qi; i++){
           id = index(ix,iy,iz,r,i);
-          fnew[id]=f[id]=feq(D0,B0,r,i,epsilonr0,mur0);
+          fnew[id]=f[id]=feq(D0,B0,r,i,epsilonr0,mur0,sigma0);
         }
     }
 }
