@@ -4,9 +4,12 @@ all: plot
 	g++ $< -o $@
 	./$@
 
-plot: Dielecttric_EMLBM.x plot.gp Dielecttric_EMLBM.cpp
+plot: Dielecttric_EMLBM.x plot.gp Dielecttric_EMLBM.cpp Parameters.h
 	gnuplot plot.gp
-	xdg-open data.jpg
+	gnuplot errors.gp
+	xdg-open datas.jpg
+	xdg-open data5.jpg
+	xdg-open Errors.jpg
 
 clean:
-	rm *.dat *.jpg *.x a.out
+	rm *.dat *.jpg *.x a.out *.pdf *.log

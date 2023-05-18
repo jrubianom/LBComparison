@@ -5,17 +5,37 @@
 #include "Vector.h"
 #include <algorithm>
 #include <vector>
-#include "Parameters.h"
 
 using namespace std;
 
 //------------------------CONSTANTS-------------------------------
+const int Lx = 1;   //
+const int Ly = 1;   //
+const int Lz = 200; //
 const int Qr = 2, Qp = 3, Qi = 4, Qj = 2;
 //-------------------
 const double Tau = 0.5;
 const double UTau = 1/Tau;
 const double UmUTau=1-1/Tau;
 //-------------------
+const double Epsilon0=1, Mu0=2;
+const double Sigma0=0;
+const double C=1.0/sqrt(2.0);
+
+const double E00=0.001,B00=E00/C;
+const double T=25.0,omega=2*M_PI/T;
+const double epsr1 = 1, epsr2 = 2.5;
+
+//------------------Electromagnetic Constants for the Media------------------------------
+double mur(int ix,int iy,int iz){
+    return 1.0;
+}
+double epsilonr(int ix,int iy, int iz){
+  return (epsr1 + epsr2)/2.0 + (epsr2 - epsr1)/2*tanh(iz-Lz/2);
+}
+double sigma(int ix,int iy,int iz){
+    return 0.0;
+}
 
 //--------------------- class LatticeBoltzmann ------------
 class LatticeBoltzmann{
@@ -25,18 +45,8 @@ class LatticeBoltzmann{
     vector3D b[3][4][2], b0; //b[p][i][j]
     double *f=nullptr,*fnew=nullptr;//f[ix][iy][iz][r][p][i][j]
     double *f0 = nullptr,*f0new = nullptr;//f0[ix][iy][iz] (r=0)
-    //---------
-    int Lx,Ly,Lz;
-    int scale = 1;
-    //------------
-    double Epsilon0=3, Mu0=3;
-    double C=1.0/sqrt(Epsilon0*Mu0);
-    double Sigma0=0.0;
-    //-----------------
-    double E00=0.001,B00=E00/C;
-    double epsr1 = 1, epsr2 = 2.5;
   public:
-    LatticeBoltzmann(Parameter P);
+    LatticeBoltzmann();
     ~LatticeBoltzmann();
     int index(int ix,int iy,int iz,int r,int p,int i,int j);
     int index0(int ix,int iy,int iz);
@@ -59,38 +69,15 @@ class LatticeBoltzmann{
                double Epsilonr,double Mur,
                int r,int p,int i,int j);
     double feq0(double rhoc0);
-//-----------
-    double mur(int ix,int iy,int iz){return 1.0;}
-
-    double epsilonr(int ix,int iy, int iz){
-      double epsr = epsr1;
-      if(iz > Lz/2)
-        epsr = epsr2;
-      //epsr = (epsr1 + epsr2)/2.0 + (epsr2 - epsr1)/2*tanh(iz-Lz/2.0);
-      return epsr;
-    }
-    double sigma(int ix,int iy,int iz){return 0.0;}
-//-------------
     //Simulation Functions
     void Start(void);
     void Collision(void);
     void ImposeFields(int t);
     void Advection(void);
-    void Print(ofstream &fileAmpl, ofstream &fileError,int i);
+    void Print();
 };
 
-LatticeBoltzmann::LatticeBoltzmann(Parameter P){
-  scale = P.scale;
-  Lx = P.Lx;
-  Ly = P.Ly;
-  Lz = P.Lz;
-//-------------------
-  Epsilon0 = P.Epsilon0; Mu0 = P.Mu0;
-  Sigma0 = P.Sigma0;
-  C = P.C;
-  E00 = P.E00; B00 = P.B00;
-  epsr1 = P.epsr1; epsr2 = P.epsr2;
-//-------------------
+LatticeBoltzmann::LatticeBoltzmann(){
   int ix,iy,iz,alpha,r,p,i,j;
   //Velocity vectors V[p][i]=V^p_i (in components)
   V0[0]=V0[1]=V0[2]=0;
@@ -298,9 +285,10 @@ void LatticeBoltzmann::Advection(void){
       }
 }
 
-void LatticeBoltzmann::Print(ofstream &fileAmpl, ofstream &fileError,int Ref){
+void LatticeBoltzmann::Print(void){
   int ix=0,iy=0,iz,r,p,i,j; double sigma0,mur0,epsilonr0,prefactor0;
   double rhoc0; vector3D D0,B0,E0,H0,Jprima0,Eprima0; double E2,B2;
+  ofstream Myfile("data.dat");
   double Et, Er,EAmp;
   for(iz=0;iz<Lz;iz++){
     //Compute the electromagnetic constants
@@ -313,7 +301,7 @@ void LatticeBoltzmann::Print(ofstream &fileAmpl, ofstream &fileError,int Ref){
     //Print
     E2=norma2(Eprima0); B2=norma2(B0);
     //cout<<iz<<" "<<0.5*(epsilonr0*E2+B2/mur0)<<endl;
-    fileAmpl<<double(iz)/Lz<<" "<<Eprima0.x()/E00<<endl;
+    Myfile<<double(iz)/Lz<<" "<<Eprima0.x()/E00<<endl;
     EAmp = abs(Eprima0.x());
 
     if(iz==0){
@@ -326,44 +314,33 @@ void LatticeBoltzmann::Print(ofstream &fileAmpl, ofstream &fileError,int Ref){
         Et = EAmp;
     }
   }
+  Myfile.close();
   Er = Er/E00; Et = Et/E00;
   double Ertheo,Ettheo,ratio = sqrt(epsr2/epsr1);
   Ertheo = abs((ratio -1 )/(ratio + 1));
   Ettheo = abs(2/(ratio + 1));
-  fileError << Ref << "\t" << Er << "\t"  << Ertheo << "\t" <<  abs(100*(Ertheo - Er)/Ertheo) << "\t" <<
-            Et << "\t" << Ettheo << "\t" << abs(100*(Ettheo - Et)/Ettheo) << endl;
+  cout << "Simulated:\n";
+  cout << Er << "\t"  << Et << endl;
+  cout << "Theoretical:\n";
+  cout << Ertheo << "\t"  << Ettheo << endl;
+  cout << "Realtive Error Er and Et %" << endl;
+  cout << abs(100*(Ertheo - Er)/Ertheo) << "\t" << abs(100*(Ettheo - Et)/Ettheo) << endl;
 }
 
 int main(){
-  Parameter P;
-  int Lz;
-  double C = P.C;
-  int t,tmax;
-  string AmplFileName,ErrorFileName;
-  ErrorFileName = "Errors.dat";
-  ofstream MyError("Errors.dat");
-  MyError << "Refinment\tSimulated Er \tTheorical Er \tRelative Error\t"<<
-    "Simulated Et \tTheorical Et\tRelative Error\n";
-  for (int i = 1; i < 6; i++){
-    //Refine the mesh
-    Lz = 100*i;
-    P.Lz = Lz;
+  LatticeBoltzmann DielectricPulse;
+  int t, tmax=Lz/(2*C);
 
-    LatticeBoltzmann DielectricPulse(P);
-    DielectricPulse.Start();
-    DielectricPulse.ImposeFields(0);
+  DielectricPulse.Start();
+  DielectricPulse.ImposeFields(0);
 
-    tmax=Lz/(2*C);
-    for(t=0;t<tmax;t++){
-      DielectricPulse.Collision();
-      DielectricPulse.ImposeFields(t);
-      DielectricPulse.Advection();
-    }
-    AmplFileName = "data"+to_string(i)+".dat";
-    ofstream Myfile(AmplFileName);
-    DielectricPulse.Print(Myfile,MyError,i);
-    Myfile.close();
+  for(t=0;t<tmax;t++){
+    DielectricPulse.Collision();
+    DielectricPulse.ImposeFields(t);
+    DielectricPulse.Advection();
   }
-  MyError.close();
+
+  DielectricPulse.Print();
+  
   return 0;
 }
