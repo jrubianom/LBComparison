@@ -26,7 +26,7 @@ double mur(int ix,int iy,int iz){
     return 1.0;
 }
 double epsilonr(int ix,int iy, int iz){
-    return 1.5+0.5*tanh((double)(iz-(Lz/2.0)));//3-tanh((double)(iz-(Lz/2.0)));
+    return 1;//1.5+0.5*tanh((double)(iz-(Lz/2.0)));//3-tanh((double)(iz-(Lz/2.0)));
 }
 double sigma(int ix,int iy,int iz){
     return 0.0;
