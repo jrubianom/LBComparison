@@ -16,6 +16,9 @@ const double UmUTau=1-1/Tau;
 const double Epsilon0=1.0, Mu0=1.0;
 const double Sigma0=0.0125;
 const double C=2.0; //Velocidad de la partícula(no necesariamente vel. de la luz)
+const double EA = 1.3*C*C;
+const double EB = -1.0*C*C;
+const double ED = 0.5*C*C;
 
 const double E00=1.0,B00=E00/C;
 
@@ -49,9 +52,11 @@ public:
   //Fields from direct sums
   vector3D E(int ix,int iy,int iz,bool UseNew);
   vector3D H(int ix,int iy,int iz,bool UseNew);
+  double wH(int ix,int iy,int iz,bool UseNew);
+  double wE(int ix,int it,int iz,bool UseNew);
   //Equilibrium Functions
-  double feq(vector3D & H0,vector3D & E0,double Epsilonr,double Mur, int alpha, int i);
-  double geq(vector3D & H0,vector3D & E0,double Epsilonr,double Mur, int alpha, int i);
+  double feq(vector3D & H0,vector3D & E0, double wH0,double Epsilonr,double Mur, int alpha, int i);
+  double geq(vector3D & H0,vector3D & E0, double wH0,double Epsilonr,double Mur, int alpha, int i);
   //Simulation Functions
   void Start(void);
   void Collision(void);
@@ -79,7 +84,7 @@ LatticeBoltzmann::LatticeBoltzmann(void){
 //-----------------MACROSCOPIC FIELDS------------------
 //Fields from direct sums
 
-vector3D LatticeBoltzmann::E(int ix,int iy,int iz,bool UseNew){
+vector3D LatticeBoltzmann::H(int ix,int iy,int iz,bool UseNew){
   int alpha; vector3D sum,x,y,z;
   sum.cargue(0,0,0);
   x.cargue(1,0,0), y.cargue(0,1,0), z.cargue(0,0,1);
@@ -94,7 +99,7 @@ vector3D LatticeBoltzmann::E(int ix,int iy,int iz,bool UseNew){
   return sum;
 }
   
-vector3D LatticeBoltzmann::H(int ix,int iy,int iz,bool UseNew){
+vector3D LatticeBoltzmann::E(int ix,int iy,int iz,bool UseNew){
   int alpha; vector3D sum,x,y,z;
   sum.cargue(0,0,0);
   x.cargue(1,0,0), y.cargue(0,1,0), z.cargue(0,0,1);
@@ -109,17 +114,75 @@ vector3D LatticeBoltzmann::H(int ix,int iy,int iz,bool UseNew){
   return sum;
 }
 
+double LatticeBoltzmann::wE(int ix,int iy,int iz, bool UseNew){
+  int alpha; double Ex, sum = 0.0;
+
+  //Arbitrariamente se usa la componente x
+  for(alpha=0;alpha<13;alpha++){
+    if(UseNew){
+      Ex+=gnew[ix][iy][iz][alpha][0];
+      if(alpha == 0)
+	sum+=gnew[ix][iy][iz][alpha][0]*ED;
+      else if(alpha <=6)
+	sum+=gnew[ix][iy][iz][alpha][0]*EA;
+      else
+	sum+=gnew[ix][iy][iz][alpha][0]*EB;
+    }else{
+      Ex+=g[ix][iy][iz][alpha][0];
+      if(alpha == 0)
+	sum+=g[ix][iy][iz][alpha][0]*ED;
+      else if(alpha <=6)
+	sum+=g[ix][iy][iz][alpha][0]*EA;
+      else
+	sum+=g[ix][iy][iz][alpha][0]*EB;
+    }
+  }
+
+  return sum/Ex;
+  
+}
+
+double LatticeBoltzmann::wH(int ix,int iy,int iz, bool UseNew){
+  int alpha; double Hx, sum = 0.0;
+
+  //Arbitrariamente se usa la componente y
+  for(alpha=0;alpha<13;alpha++){
+    if(UseNew){
+      Hx+=fnew[ix][iy][iz][alpha][1];
+      if(alpha == 0)
+	sum+=fnew[ix][iy][iz][alpha][1]*ED;
+      else if(alpha <=6)
+	sum+=fnew[ix][iy][iz][alpha][1]*EA;
+      else
+	sum+=fnew[ix][iy][iz][alpha][1]*EB;
+    }else{
+      Hx+=f[ix][iy][iz][alpha][1];
+      if(alpha == 0)
+	sum+=f[ix][iy][iz][alpha][1]*ED;
+      else if(alpha <=6)
+	sum+=f[ix][iy][iz][alpha][1]*EA;
+      else
+	sum+=f[ix][iy][iz][alpha][1]*EB;
+    }
+  }
+  return sum/Hx;
+  
+}
 //---------------EQUILIBRIUM FUNCTIONS-------------
-double LatticeBoltzmann::feq(vector3D & E0,vector3D & H0, double epsilonr0,double mur0, int alpha, int i){
+double LatticeBoltzmann::feq(vector3D & E0,vector3D & H0, double wH0, double epsilonr0,double mur0, int alpha, int i){
   double b = 6;
   double c = Ccell(epsilonr0,mur0);
   double D = 3;
 
   //Parameters
-  double A0 = 4*D/(mur0*Mu0*epsilonr0*Epsilon0*3*b*pow(c,2)) - D/(pow(mur0*Mu0*epsilonr0*Epsilon0,2)*3*b*pow(c,4));
-  double B0 = D/(pow(mur0*Mu0*epsilonr0*Epsilon0,2)*12*b*pow(c,4)) - D/(mur0*Mu0*epsilonr0*Epsilon0*12*b*pow(c,2));
-  double A2 = 4*D/(3*b*pow(c,2)) - D/(mur0*Mu0*epsilonr0*Epsilon0*3*b*pow(c,4));
-  double B2 = D/(mur0*Mu0*epsilonr0*Epsilon0*12*b*pow(c,4)) - D/(12*b*pow(c,2));
+  double A0 = (D*(ED-EB) - mur0*Mu0*epsilonr0*Epsilon0*pow(c,2)*(ED-wH0))/(mur0*Mu0*epsilonr0*Epsilon0*b*pow(c,2)*(4*EA-3*ED-EB));
+
+  double B0 = (D*(EA-ED) + mur0*Mu0*epsilonr0*Epsilon0*pow(c,2)*(ED-wH0))/(mur0*Mu0*epsilonr0*Epsilon0*b*pow(c,2)*(4*EA-3*ED-EB));
+
+  double A2 = (D*(wH0 - EB))/(b*pow(c,2)*(EA-EB));
+
+  double B2 = (D*(EA - wH0))/(4*b*pow(c,2)*(EA-EB));
+ 
   double D0 = 1-b*(A0+B0);
 
   vector3D EcrossV = E0^v[alpha];
@@ -135,16 +198,20 @@ double LatticeBoltzmann::feq(vector3D & E0,vector3D & H0, double epsilonr0,doubl
   return f_eq;
 }
 
-double LatticeBoltzmann::geq(vector3D & E0,vector3D & H0, double epsilonr0,double mur0, int alpha, int i){
+double LatticeBoltzmann::geq(vector3D & E0,vector3D & H0,double wH0, double epsilonr0,double mur0, int alpha, int i){
   double b = 6;
   double c = Ccell(epsilonr0,mur0);
   double D = 3;
-  
+
   //Parameters
-  double a0 = 4*D/(mur0*Mu0*epsilonr0*Epsilon0*3*b*pow(c,2)) - D/(pow(mur0*Mu0*epsilonr0*Epsilon0,2)*3*b*pow(c,4));
-  double b0 = D/(pow(mur0*Mu0*epsilonr0*Epsilon0,2)*12*b*pow(c,4)) - D/(mur0*Mu0*epsilonr0*Epsilon0*12*b*pow(c,2));
-  double a2 = 4*D/(3*b*pow(c,2)) - D/(mur0*Mu0*epsilonr0*Epsilon0*3*b*pow(c,4));
-  double b2 = D/(mur0*Mu0*epsilonr0*Epsilon0*12*b*pow(c,4)) - D/(12*b*pow(c,2));
+  double a0 = (D*(ED-EB) - mur0*Mu0*epsilonr0*Epsilon0*pow(c,2)*(ED-wH0))/(mur0*Mu0*epsilonr0*Epsilon0*b*pow(c,2)*(4*EA-3*ED-EB));
+
+  double b0 = (D*(EA-ED) + mur0*Mu0*epsilonr0*Epsilon0*pow(c,2)*(ED-wH0))/(mur0*Mu0*epsilonr0*Epsilon0*b*pow(c,2)*(4*EA-3*ED-EB));
+
+  double a2 = (D*(wH0 - EB))/(b*pow(c,2)*(EA-EB));
+
+  double b2 = (D*(EA - wH0))/(4*b*pow(c,2)*(EA-EB));
+ 
   double d0 = 1-b*(a0+b0);
 
   vector3D HcrossV = H0^v[alpha];
@@ -162,7 +229,7 @@ double LatticeBoltzmann::geq(vector3D & E0,vector3D & H0, double epsilonr0,doubl
 //-------------------SIMULATION FUNCTIONS ----------------------------
 void LatticeBoltzmann::Start(void){
   int ix,iy,iz,alpha,i; double mur0,epsilonr0;
-  vector3D E0,H0;
+  vector3D E0,H0; double wH0, H2;
   double amp = 0.01, iz0 = 40;
   for(ix=0;ix<Lx;ix++) //para cada celda
     for(iy=0;iy<Ly;iy++)
@@ -172,30 +239,34 @@ void LatticeBoltzmann::Start(void){
 	//Impose the fields
 	H0.cargue(0,B00*exp(-amp*(iz -iz0)*(iz - iz0)),0); //pulso
 	E0.cargue(E00*exp(-amp*(iz -iz0)*(iz - iz0)),0,0); //pulso
+	H2 = norma2(H0); wH0 = (mur0*mur0)*Mu0*H2/2.0;
 	//Impose f=fnew=feq with the desired fields
 	for(alpha=0;alpha<13;alpha++)
 	  for(i=0;i<3;i++){
-	    fnew[ix][iy][iz][alpha][i]=f[ix][iy][iz][alpha][i]=feq(E0,H0,epsilonr0,mur0,alpha,i);
-	    gnew[ix][iy][iz][alpha][i]=g[ix][iy][iz][alpha][i]=geq(E0,H0,epsilonr0,mur0,alpha,i);
+	    fnew[ix][iy][iz][alpha][i]=f[ix][iy][iz][alpha][i]=feq(E0,H0,wH0,epsilonr0,mur0,alpha,i);
+	    gnew[ix][iy][iz][alpha][i]=g[ix][iy][iz][alpha][i]=geq(E0,H0,wH0,epsilonr0,mur0,alpha,i);
 	  }
       }
 }
 
 void LatticeBoltzmann::Collision(void){
   int ix,iy,iz,alpha,i; double mur0,epsilonr0;
-  vector3D E0,H0;
+  vector3D E0,H0; double H2, wH0;
   for(ix=0;ix<Lx;ix++) //para cada celda
     for(iy=0;iy<Ly;iy++)
       for(iz=0;iz<Lz;iz++){
 	//Compute the constants
-	mur0=mur(ix,iy,iz); epsilonr0=epsilonr(ix,iy,iz);
+	mur0=mur(ix,iy,iz); epsilonr0=epsilonr(ix,iy,iz); 
 	//Compute the fields
 	E0=E(ix,iy,iz,false); H0=H(ix,iy,iz,false);
+	//Computer energy density
+	//wH0 = wH(ix,iy,iz,false);
+     	H2 = norma2(H0); wH0 = (mur0*mur0)*Mu0*H2/2.0;
 	//BGK evolution rule
 	for(alpha=0;alpha<13;alpha++)
 	  for(i=0;i<3;i++){
-	    fnew[ix][iy][iz][alpha][i]=UmUTau*f[ix][iy][iz][alpha][i]+UTau*feq(E0,H0,epsilonr0,mur0,alpha,i);
-	    gnew[ix][iy][iz][alpha][i]=UmUTau*g[ix][iy][iz][alpha][i]+UTau*geq(E0,H0,epsilonr0,mur0,alpha,i);
+	    fnew[ix][iy][iz][alpha][i]=UmUTau*f[ix][iy][iz][alpha][i]+UTau*feq(E0,H0,wH0,epsilonr0,mur0,alpha,i);
+	    gnew[ix][iy][iz][alpha][i]=UmUTau*g[ix][iy][iz][alpha][i]+UTau*geq(E0,H0,wH0,epsilonr0,mur0,alpha,i);
 	  }
       }
 }
@@ -263,7 +334,7 @@ void LatticeBoltzmann::Print(void){
 
 int main(){
   LatticeBoltzmann OndaInterface;
-  int t, tmax=10;
+  int t, tmax=20;
   
   OndaInterface.Start();
   //OndaSkin.ImposeFields(0);
