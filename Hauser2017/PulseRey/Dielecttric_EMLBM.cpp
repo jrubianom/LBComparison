@@ -17,6 +17,17 @@ double jumpfunc(double z0, double zf, double eps, double z){
   return eps/2.0*(tanh(5*(z-z0)) + tanh(5*(zf-z)));
 }
 
+const double epsrs[4] = {1,1.3,2,3};
+
+double ratio(const double* arrEps){
+  double rEt = 1,r;
+  int neps = sizeof(epsrs)/sizeof(epsrs[0]);
+  for(int i=0; i < neps-1;i++){
+    r = sqrt(arrEps[i+1]/arrEps[i]);
+    rEt *= (2/(r+1));
+  }
+  return rEt;
+}
 //--------------------- class LatticeBoltzmann ------------
 class LatticeBoltzmann{
   private:
@@ -52,25 +63,7 @@ class LatticeBoltzmann{
 
     double mur(int ix,int iy,int iz){return 1.0;}
 
-    double epsilonr(int ix,int iy, int iz){
-      /*double epsr = epsr1;
-      if(iz > Lz/2)
-        epsr = epsr2;
-      epsr = (epsr1 + epsr2)/2.0 + (epsr2 - epsr1)/2*tanh(5*(iz-Lz/2.0));
-      return epsr;
-      */
-      double step = LzPulse/4.0, epsr;
-      double z0 = Lz/2.0;
-      double epsrs[4] = {1,1.3,2,2.5}, Zs[4] = {z0,z0+step,z0+3*step,static_cast<double>(Lz)};
-      //double epsrs[2] = {1,1}, Zs[2] = {z0,static_cast<double>(Lz)};
-      epsr = epsrs[0];
-      for(int i = 0; i < 3; i++){
-        //if(Zs[i] <= iz && iz < Zs[i+1])
-        //  epsr = epsrs[i+1];
-        epsr += jumpfunc(Zs[i],Zs[i+1],epsrs[i+1],iz);
-      }
-      return epsr;
-    }
+    double epsilonr(int ix,int iy, int iz);
     double sigma(int ix,int iy,int iz){return 0.0;}
     //Simulation Functions
     void Start(void);
@@ -127,7 +120,22 @@ int LatticeBoltzmann::index(int ix,int iy,int iz,int r,int i){
 int LatticeBoltzmann::index0(int ix,int iy,int iz){
   return (iz*Lx*Ly+iy*Lx+ix);
 }
-
+//---------Epsilonr function--------------
+double LatticeBoltzmann::epsilonr(int ix,int iy, int iz){
+  double step = LzPulse/4.0, epsr;
+  double z0 = Lz/2.0;
+  double Zs[4] = {z0,z0+step,z0+3*step,static_cast<double>(Lz)};
+  //double epsrs[2] = {1,1}, Zs[2] = {z0,static_cast<double>(Lz)};
+  epsr = epsrs[0];
+  //epsr = jumpfunc(0,z0,epsrs[0],iz);
+  int n_eps = sizeof(epsrs)/sizeof(epsr);
+  for(int i = 0; i < n_eps-1; i++){
+    if(Zs[i] <= iz && iz < Zs[i+1])
+      epsr = epsrs[i+1];
+    //epsr += jumpfunc(Zs[i],Zs[i+1],epsrs[i+1],iz);
+  }
+  return epsr;
+}
 //-----------------MACROSCOPIC FIELDS------------------
 //Fields from direct sums
 vector3D LatticeBoltzmann::D(int ix,int iy,int iz,bool UseNew){
@@ -271,12 +279,9 @@ void LatticeBoltzmann::Print(ofstream &fileAmpl, ofstream &fileError,int i){
     }
   }
   Er = Er/E00; Et = Et/E00;
-  double Ertheo,Ettheo,ratio = sqrt(epsr2/epsr1);
-  Ertheo = abs((ratio -1 )/(ratio + 1));
-  Ettheo = abs(2/(ratio + 1));
-  fileError << i << "\t" << Er << "\t"  << Ertheo << "\t" <<  abs(100*(Ertheo - Er)/Ertheo) << "\t" <<
-    Et << "\t" << Ettheo << "\t" << abs(100*(Ettheo - Et)/Ettheo) << endl;
-
+  double Ettheo = ratio(epsrs);
+  fileError << i << "\t" << Et << "\t" << Ettheo << "\t" << abs(100*(Ettheo - Et)/Ettheo) << endl;
+  cout << i << "\t" << Et << "\t" << Ettheo << "\t" << abs(100*(Ettheo - Et)/Ettheo) << endl;
 }
 
 void LatticeBoltzmann::PrintFrame(string CurrentFrame){
@@ -330,13 +335,12 @@ int main(){
   double xmax = 1, ymax = 1.2;
   ErrorFileName = "Errors.dat";
   ofstream MyError("Errors.dat");
-  MyError << "Refinment\tSimulated Er \tTheorical Er \tRelative Error\t"<<
-    "Simulated Et \tTheorical Et\tRelative Error\n";
+  MyError << "Refinment\tSimulated Et \tTheorical Et \tRelative Error\n";
 
   string current_frame = "Animation/frame.dat";
   ofstream AnimFile("animation.gp");
   StartAnimation(AnimFile,xmax,ymax);
-  for (int i = 1; i < 2; i++){
+  for (int i = 1; i < 5; i++){
     //Refine the mesh
     Lz = 200*5*i;
     P.Lz = Lz;
