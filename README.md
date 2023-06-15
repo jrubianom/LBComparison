@@ -9,7 +9,7 @@ Electromagnetic simulation plays a crucial role in various fields such as physic
 
 The MM model published by M. Mendoza and D. Muñoz in [2008](https://arxiv.org/abs/0806.2678) incorporates the relative permittivity and permeability of the medium being simulated, furthermore sources such as currents can be implemented. It provides a reliable framework for accurately representing electromagnetic phenomena in different materials.
 
-On the other hand, the HV model is an alternative approach proposed by A. Hauser and L. Verhey in [2017](https://journals.aps.org/pre/abstract/10.1103/PhysRevE.96.063306). The authors claim that address certain limitations of the MM model, particularly regarding stability and smooth transitions at interfaces with different permeability and permittivity.
+On the other hand, the HV model is an alternative approach proposed by A. Hauser and L. Verhey in [2017](https://journals.aps.org/pre/abstract/10.1103/PhysRevE.96.063306). The authors claim that the HV model address certain limitations of the MM model, particularly regarding stability and smooth transitions at interfaces with different permeability and permittivity. Here, we modified the HV model and we add a source term as part of the collision term.
 
 ## Repository Structure
 
@@ -39,14 +39,14 @@ Additionally, there are two extra directories: MMmodelTimes and HVmodelTimes. Th
 
 To get started with the repository, follow these steps:
 
-Clone the repository to your local machine.
-Navigate to the desired model directory (HV2017model or MMmodel).
-Choose one of the subdirectories based on the simulation you want to run (e.g., DielectricPulse2Interfaces).
-Open the chosen subdirectory and review the available files, including Gnuplot scripts, auxiliary libraries, Makefile, and main.cpp.
-Compile and execute the code by running the make command in the terminal.
-The simulation will produce output files and graphs, which can be found in the created folders.
-Feel free to explore different subdirectories and modify the parameters in the main.cpp file to customize the simulations according to your requirements.
-Feel free to delete the output files by running make clean.
+- Clone the repository to your local machine.
+- Navigate to the desired model directory (HV2017model or MMmodel).
+- Choose one of the subdirectories based on the simulation you want to run (e.g., DielectricPulse2Interfaces).
+- Open the chosen subdirectory and review the available files, including Gnuplot scripts, auxiliary libraries, Makefile, and main.cpp.
+- Compile and execute the code by running the make command in the terminal.
+- The simulation will produce output files and graphs, which can be found in the created folders.
+- Feel free to explore different subdirectories and modify the parameters in the main.cpp file to customize the simulations according to your requirements.
+- Feel free to delete the output files by running make clean.
 
 ## Contributing
 
