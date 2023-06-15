@@ -27,11 +27,10 @@ fitted_ref = lambda e: e**fit_ref.slope*np.exp(fit_ref.intercept)
 fit_trans = linregress(np.log(error_trans), np.log(time))
 fitted_trans = lambda e: e**fit_trans.slope*np.exp(fit_trans.intercept)
 
-print('LB HV\nGaussian pulse crossing an interface')
+print('LB MM\nGaussian pulse crossing an interface')
 print('Time vs Reflected pulse error', '[power, coeff] = ', fit_ref.slope, fit_ref.intercept, fit_ref.rvalue)
 print('Time vs Transmitted pulse error', '[power, coeff] = ', fit_trans.slope, fit_trans.intercept, fit_trans.rvalue)
 
-# Figsize based on PRL column width and the Golden Ratio
 fig1, ax1 = plt.subplots()
 
 ax1.set_xlabel('Relative error')
@@ -44,7 +43,7 @@ string_ref = '{0:.3f}'.format(np.exp(fit_ref.intercept)) + '$\\epsilon_{ref}' + 
 ax1.plot(error_ref, fitted_ref(error_ref), 'k-', label=string_ref)
 ax1.legend()
 
-plt.savefig('CPU_time_vs_rel_error_ref.jpg')
+plt.savefig('CPU_time_vs_rel_error_ref_MM.jpg')
 
 fig2, ax2 = plt.subplots()
 
@@ -58,6 +57,6 @@ string_trans = '{0:.3f}'.format(np.exp(fit_trans.intercept)) + '$\\epsilon_{tran
 ax2.plot(error_trans, fitted_trans(error_trans), 'k-', label=string_trans)
 ax2.legend()
 
-plt.savefig('CPU_time_vs_rel_error_trans.jpg')
+plt.savefig('CPU_time_vs_rel_error_trans_MM.jpg')
 
 plt.show()
