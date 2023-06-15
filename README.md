@@ -9,7 +9,7 @@ Electromagnetic simulation plays a crucial role in various fields such as physic
 
 The MM model published by M. Mendoza and D. Muñoz in [2008](https://arxiv.org/abs/0806.2678) incorporates the relative permittivity and permeability of the medium being simulated, furthermore sources such as currents can be implemented. It provides a reliable framework for accurately representing electromagnetic phenomena in different materials.
 
-On the other hand, the HV model is an alternative approach proposed by A. Hauser and L. Verhey in [2017](https://journals.aps.org/pre/abstract/10.1103/PhysRevE.96.063306). The authors claim that the HV model address certain limitations of the MM model, particularly regarding stability and smooth transitions at interfaces with different permeability and permittivity. Here, we modified the HV model and we add a source term as part of the collision term.
+On the other hand, the HV model is an alternative approach proposed by A. Hauser and L. Verhey in [2017](https://journals.aps.org/pre/abstract/10.1103/PhysRevE.96.063306). The authors claim that the HV model address certain limitations of the MM model, particularly regarding stability and smooth transitions at interfaces with different permeability and permittivity. Here, we modified the HV model and we added a source term as part of the collision term.
 
 ## Repository Structure
 
