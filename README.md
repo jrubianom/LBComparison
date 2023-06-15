@@ -40,7 +40,7 @@ Additionally, there are two extra directories: MMmodelTimes and HVmodelTimes. Th
 To get started with the repository, follow these steps:
 
 - Clone the repository to your local machine.
-- Navigate to the desired model directory (HV2017model or MMmodel).
+- Navigate to the desired model directory (HV2017model, MMmodel, MMmodelTimes or HVmodelTimes.).
 - Choose one of the subdirectories based on the simulation you want to run (e.g., DielectricPulse2Interfaces).
 - Open the chosen subdirectory and review the available files, including Gnuplot scripts, auxiliary libraries, Makefile, and main.cpp.
 - Compile and execute the code by running the make command in the terminal.
