@@ -50,7 +50,7 @@ To get started with the repository, follow these steps:
 
 ## Contributing
 
-Contributions to this project are welcome! If you have any improvements, bug fixes, or new features to propose, please submit a pull request. Be sure to follow the project's guidelines and coding conventions.
+Contributions to this project are welcome! If you have any improvements, bug fixes, or new features to propose, please submit a pull request.
 
 ## Acknowledgements
 
