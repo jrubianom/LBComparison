@@ -56,7 +56,7 @@ fig1, (axB, axE) = plt.subplots(ncols=2, nrows=1, sharey='col')
 
 axB.set_xlabel('Cost')
 axB.set_ylabel('Time [s]')
-axB.set_title('Magnetic field error (HV)')
+axB.set_title('Magnetic field error (MM)')
 axB.set_xscale('log')
 axB.set_yscale('log')
 axB.errorbar(xB, y, yerr=std_err, fmt='k.')
@@ -66,7 +66,7 @@ axB.legend()
 
 axE.set_xlabel('Cost')
 axE.set_ylabel('Time [s]')
-axE.set_title('Electric field error (HV)')
+axE.set_title('Electric field error (MM)')
 axE.set_xscale('log')
 axE.set_yscale('log')
 axE.errorbar(xE, y, yerr=std_err, fmt='k.')
@@ -74,6 +74,8 @@ string = '{0:.3e}'.format(np.exp(fitE.intercept)) + '$\\cdot\\epsilon' + '^{' + 
 axE.plot(xE, fittedE(xE), 'k-', label=string)
 axE.legend()
 
-plt.savefig('CPU_time_vs_cost_DIP_HV.jpg')
+plt.tight_layout()
+
+plt.savefig('CPU_time_vs_cost_DIP_MM.jpg')
 
 plt.show()

@@ -55,11 +55,13 @@ int main(){
       clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &begin);
       for(t=0;t<tmax;t++){
         Dipole.UpdateTime(t);
-        cout<< "Iteracion:\t"<< t+1 <<endl;
+        //cout<< "Iteracion:\t"<< t+1 <<endl;
         Dipole.Collision();
         Dipole.Advection();
       }
       clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+
+      cout << "Iteracion: " << iteration << "/3" << endl;
 
       long seconds = end.tv_sec - begin.tv_sec;
       long nanoseconds = end.tv_nsec - begin.tv_nsec;
@@ -77,6 +79,7 @@ int main(){
       Dipole.Print(fileB, fileE, contour);
 
     }
+    cout << "Refinamiento " << i << "/12" << endl;
   }
   
   fileTime.close();

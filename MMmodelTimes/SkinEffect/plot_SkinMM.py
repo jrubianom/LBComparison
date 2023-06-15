@@ -47,7 +47,10 @@ ax1.set_yscale('log')
 ax1.errorbar(x, y, yerr=std_err, fmt='k.')
 string = '{0:.3e}'.format(np.exp(fit.intercept)) + '$\\cdot\\epsilon' + '^{' + '{0:.3f}'.format(fit.slope) + '}$'
 ax1.plot(x, fitted(x), 'k-', label=string)
+ax1.tick_params(axis='x', rotation=45)
 ax1.legend()
+
+plt.tight_layout()
 
 plt.savefig('CPU_time_vs_cost_SE_MM.jpg')
 

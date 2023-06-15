@@ -58,5 +58,3 @@ ax2.plot(error_trans, fitted_trans(error_trans), 'k-', label=string_trans)
 ax2.legend()
 
 plt.savefig('CPU_time_vs_rel_error_trans_MM.jpg')
-
-plt.show()

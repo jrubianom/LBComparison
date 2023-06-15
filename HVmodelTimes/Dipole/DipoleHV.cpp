@@ -30,7 +30,7 @@ int main(){
   ofstream fileTime("fileTime.dat");
 
   // Loop to refine the mesh
-  for(int i=1; i<4; i++){
+  for(int i=1; i<7; i++){
     // Domain size
     int size = 100+10*(i-1);
     Lx = Ly = Lz = size;
@@ -38,7 +38,7 @@ int main(){
     double T = 17.68/100.0*Lz/C, omega = 2*M_PI/T;
     double lambda = C*T, k = omega/C, alpha = 0.5;
 
-    for(int iteration=0; iteration<1; iteration++){
+    for(int iteration=0; iteration<3; iteration++){
       Parameter Params(Lx,Ly,Lz,Epsilon0,Mu0,Sigma0,E00,B00,J0,alpha,T);
       LatticeBoltzmann Dipole(Params);
 
@@ -53,11 +53,13 @@ int main(){
       clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &begin);
       for(t=0;t<tmax;t++){
         Dipole.UpdateTime(t);
-        cout<< "Iteracion:\t"<< t+1 <<endl;
+        //cout<< "Iteracion:\t"<< t+1 <<endl;
         Dipole.Collision();
         Dipole.Advection();
       }
       clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+
+      cout << "Iteracion: " << iteration << "/2" << endl;
 
       long seconds = end.tv_sec - begin.tv_sec;
       long nanoseconds = end.tv_nsec - begin.tv_nsec;
@@ -75,6 +77,7 @@ int main(){
       Dipole.Print(fileB, fileE, contour);
 
     }
+    cout << "Refinamiento " << i << "/11" << endl;
     
   }
 

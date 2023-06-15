@@ -4,7 +4,7 @@ all: plot
 	g++ $< -o $@ -O3
 	./$@
 
-plot: DipoleMM.x plot_DipoleMM.py MDipoleMM.cpp Parameters.h Theory.h
+plot: DipoleMM.x plot_DipoleMM.py DipoleMM.cpp Parameters.h Theory.h
 	python plot_DipoleMM.py
 
 clean:

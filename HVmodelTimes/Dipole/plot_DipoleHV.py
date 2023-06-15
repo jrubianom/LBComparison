@@ -74,6 +74,8 @@ string = '{0:.3e}'.format(np.exp(fitE.intercept)) + '$\\cdot\\epsilon' + '^{' + 
 axE.plot(xE, fittedE(xE), 'k-', label=string)
 axE.legend()
 
+plt.tight_layout()
+
 plt.savefig('CPU_time_vs_cost_DIP_HV.jpg')
 
 plt.show()
