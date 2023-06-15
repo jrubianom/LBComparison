@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.stats import linregress
 import matplotlib.pyplot as plt
 
 data = np.loadtxt("Errors.dat", unpack=True, skiprows=1)
@@ -20,27 +21,42 @@ for i in range(len(refinements)):
 
 std_err = std_dev/np.sqrt(len(data[0]/len(refinements)))
 
-# Figsize based on PRL column width and the Golden Ratio
-fig1, ax1 = plt.subplots(ncols=1, nrows=1, figsize=(3.375, 2.086), dpi=500)
+fit_ref = linregress(np.log(error_ref), np.log(time))
+fitted_ref = lambda e: e**fit_ref.slope*np.exp(fit_ref.intercept)
+
+fit_trans = linregress(np.log(error_trans), np.log(time))
+fitted_trans = lambda e: e**fit_trans.slope*np.exp(fit_trans.intercept)
+
+print('LB MM\nGaussian pulse crossing an interface')
+print('Time vs Reflected pulse error', '[power, coeff] = ', fit_ref.slope, fit_ref.intercept, fit_ref.rvalue)
+print('Time vs Transmitted pulse error', '[power, coeff] = ', fit_trans.slope, fit_trans.intercept, fit_trans.rvalue)
+
+fig1, ax1 = plt.subplots()
 
 ax1.set_xlabel('Relative error')
 ax1.set_ylabel('CPU time [s]')
-ax1.set_title('Reflected pulse')
+ax1.set_title('Reflected pulse (HV)')
 ax1.set_xscale('log')
 ax1.set_yscale('log')
 ax1.errorbar(error_ref, time, yerr=std_dev, fmt='k.')
+string_ref = '{0:.3f}'.format(np.exp(fit_ref.intercept)) + '$\\epsilon_{ref}' + '^{' + '{0:.3f}'.format(fit_ref.slope) + '}$'
+ax1.plot(error_ref, fitted_ref(error_ref), 'k-', label=string_ref)
+ax1.legend()
 
-plt.savefig('CPU_time_vs_rel_error_ref.jpg')
+plt.savefig('CPU_time_vs_rel_error_ref_HV.jpg')
 
-fig2, ax2 = plt.subplots(ncols=1, nrows=1, figsize=(3.375, 2.086), dpi=500)
+fig2, ax2 = plt.subplots()
 
 ax2.set_xlabel('Relative error')
 ax2.set_ylabel('CPU time [s]')
-ax2.set_title('Transmited pulse')
+ax2.set_title('Transmited pulse (MM)')
 ax2.set_xscale('log')
 ax2.set_yscale('log')
 ax2.errorbar(error_trans, time, yerr=std_dev, fmt='k.')
+string_trans = '{0:.3f}'.format(np.exp(fit_trans.intercept)) + '$\\epsilon_{trans}' + '^{' + '{0:.3f}'.format(fit_trans.slope) + '}$'
+ax2.plot(error_trans, fitted_trans(error_trans), 'k-', label=string_trans)
+ax2.legend()
 
-plt.savefig('CPU_time_vs_rel_error_trans.jpg')
+plt.savefig('CPU_time_vs_rel_error_trans_HV.jpg')
 
 plt.show()
