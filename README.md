@@ -60,4 +60,4 @@ We would like to acknowledge the contributions of the original authors of the MM
 
 For any inquiries or further information about this project, please contact [jrubianom@unal.edu.co](mailto:jrubianom@unal.edu.co).
 
-We look forward to collaborating and advancing the understanding and implementation of electromagnetic simulation using the MM model and HV model, and other alterantives Lattice Boltzmann methods.
+We look forward to collaborating and advancing the understanding and implementation of electromagnetic simulation using the MM model and HV model, and other alternative Lattice Boltzmann methods.
