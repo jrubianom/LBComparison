@@ -33,7 +33,7 @@ Each subdirectory consists of the following components:
 
 To run the code in each of the four subdirectories, simply execute the make command. This will create folders containing graphs and text files as simulation results.
 
-The code in directory Memory_vs_Erorr simulates the 1D Dielectric Gaussian Pulse through one interaface for both models and creates a graph of the memory used by the distribution functions vs. relative error.
+The code in directory Memory_vs_Error simulates the 1D Dielectric Gaussian Pulse through one interaface for both models and creates a graph of the memory used by the distribution functions vs. relative error.
 
 Additionally, there are two extra directories: MMmodelTimes and HVmodelTimes. These directories include similar cases but also measure the execution times.
 
@@ -42,7 +42,7 @@ Additionally, there are two extra directories: MMmodelTimes and HVmodelTimes. Th
 To get started with the repository, follow these steps:
 
 - Clone the repository to your local machine.
-- Navigate to the desired model directory (HV2017model, MMmodel, MMmodelTimes or HVmodelTimes.).
+- Navigate to the desired model directory (HV2017model, MMmodel, Memory_vs_Error, MMmodelTimes or HVmodelTimes.).
 - Choose one of the subdirectories based on the simulation you want to run (e.g., DielectricPulse2Interfaces).
 - Open the chosen subdirectory and review the available files, including Gnuplot scripts, auxiliary libraries, Makefile, and main.cpp.
 - Compile and execute the code by running the make command in the terminal.
